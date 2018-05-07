@@ -17,13 +17,7 @@
 require "mkmf"
 
 def ln_fallback(source, destination)
-  FileUtils.ln(source, destination)
-rescue
-  begin
-    FileUtils.ln_s(source, destination)
-  rescue
-    FileUtils.cp(source, destination)
-  end
+  FileUtils.cp(source, destination)
 end
 
 # Check pkg-config first to inform the library is missing if so.
