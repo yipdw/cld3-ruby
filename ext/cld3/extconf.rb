@@ -17,6 +17,7 @@
 require "mkmf"
 
 def ln_fallback(source, destination)
+  puts "ln_fallback: #{source} -> #{destination}"
   FileUtils.cp(source, destination)
 end
 
@@ -26,9 +27,15 @@ pkg_config("protobuf") or abort "Failed to locate protobuf"
 FileUtils.mkdir_p("cld_3/protos")
 FileUtils.mkdir_p("script_span")
 
+the_prefix = File.expand_path(File.dirname(__FILE__))
+
 [ "feature_extractor", "sentence", "task_spec" ].each {|name|
-  `protoc '#{name}.proto' --cpp_out=.`
-  ln_fallback("#{name}.pb.h", "cld_3/protos/#{name}.pb.h")
+  Dir.chdir("#{the_prefix}/ext/src") do
+    cmd = "protoc '#{name}.proto' --cpp_out='.'"
+    puts cmd
+    `#{cmd}`
+    ln_fallback("#{name}.pb.h", "#{the_prefix}/cld_3/protos/#{name}.pb.h")
+  end
 }
 
 [
@@ -46,8 +53,8 @@ FileUtils.mkdir_p("script_span")
   "utf8scannot_lettermarkspecial.h",
   "utf8statetable.h"
 ].each {|name|
-  ln_fallback("#{name}", "script_span/#{name}")
+  ln_fallback("#{the_prefix}/ext/src/script_span/#{name}", "#{the_prefix}/script_span/#{name}")
 }
 
-$CXXFLAGS += " -fvisibility=hidden -std=c++11"
+$CXXFLAGS += " -fvisibility=hidden -std=c++11 -I#{the_prefix}/ext/src"
 create_makefile("libcld3")
